@@ -1,0 +1,28 @@
+00:51:03.353 Error: [$injector:modulerr] Failed to instantiate module adminApp due to:
+[$injector:modulerr] Failed to instantiate module adminApp.login due to:
+[$injector:unpr] Unknown provider: $stateProvider
+http://errors.angularjs.org/1.4.9/$injector/unpr?p0=%24stateProvider
+minErr/<@http://localhost:9000/bower_components/angular/angular.js:68:12
+createInjector/providerCache.$injector<@http://localhost:9000/bower_components/angular/angular.js:4346:19
+getService@http://localhost:9000/bower_components/angular/angular.js:4494:39
+invoke@http://localhost:9000/bower_components/angular/angular.js:4526:1
+runInvokeQueue@http://localhost:9000/bower_components/angular/angular.js:4441:11
+loadModules/<@http://localhost:9000/bower_components/angular/angular.js:4450:11
+forEach@http://localhost:9000/bower_components/angular/angular.js:341:11
+loadModules@http://localhost:9000/bower_components/angular/angular.js:4431:5
+loadModules/<@http://localhost:9000/bower_components/angular/angular.js:4448:40
+forEach@http://
+minErr/<() angular.js:68
+loadModules/<() angular.js:4470
+forEach() angular.js:341
+loadModules() angular.js:4431
+createInjector() angular.js:4356
+bootstrap/doBootstrap() angular.js:1677
+bootstrap() angular.js:1698
+angularInit() angular.js:1592
+<anonymous> angular.js:29652
+jQuery.Callbacks/fire() jquery.js:3182
+jQuery.Callbacks/self.fireWith() jquery.js:3312
+.ready() jquery.js:3531
+completed() jquery.js:3547
+1 angular.js:68:12
