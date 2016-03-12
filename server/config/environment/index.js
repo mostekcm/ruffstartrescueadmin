@@ -29,7 +29,11 @@ var all = {
 
   // Secret for session, you will want to change this and make it an environment variable
   secrets: {
-    session: 'admin-secret'
+    session: process.env.SESSION_SECRET,
+    auth0: {
+      secret: process.env.AUTH0_CLIENT_SECRET,
+      clientID: process.env.AUTH0_CLIENT_ID
+    },
   },
 
   // MongoDB connection options

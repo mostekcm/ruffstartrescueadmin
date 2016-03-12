@@ -1,8 +1,8 @@
 <header class="hero-unit" id="banner">
   <div class="container">
-    <h1>'Allo, 'Allo!</h1>
-    <p class="lead">Kick-start your next web app with Angular Fullstack</p>
-    <img src="assets/images/yeoman.png" alt="I'm Yeoman">
+    <h1>'Allo, 'Allo, {{main.auth.profile.nickname}}!</h1>
+    <p class="lead">Welcome to the Ruff Start Rescue Admin Page</p>
+    <img src="assets/images/ruffstartlogo.png">
   </div>
 </header>
 
@@ -15,7 +15,29 @@
       </ul>
     </div>
   </div>
-  <div class="row">
-    Hello {{main.auth.profile.nickname}}!
-  </div>
+</div>
+
+<script>
+  window.fbAsyncInit = function() {
+    FB.init({
+      appId      : '1675879742679448',
+      xfbml      : true,
+      version    : 'v2.5'
+    });
+  };
+
+  (function(d, s, id){
+    var js, fjs = d.getElementsByTagName(s)[0];
+    if (d.getElementById(id)) {return;}
+    js = d.createElement(s); js.id = id;
+    js.src = "//connect.facebook.net/en_US/sdk.js";
+    fjs.parentNode.insertBefore(js, fjs);
+  }(document, 'script', 'facebook-jssdk'));
+</script>
+
+<div
+  class="fb-like"
+  data-share="true"
+  data-width="450"
+  data-show-faces="true">
 </div>

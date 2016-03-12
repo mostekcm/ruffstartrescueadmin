@@ -28,6 +28,9 @@ module.exports = function(config) {
       'client/bower_components/angular-ui-router/release/angular-ui-router.js',
       'client/bower_components/angular-jwt/dist/angular-jwt.js',
       'client/bower_components/a0-angular-storage/dist/angular-storage.js',
+      'client/bower_components/auth0.js/build/auth0.js',
+      'client/bower_components/auth0-lock/build/auth0-lock.js',
+      'client/bower_components/auth0-angular/build/auth0-angular.js',
       'client/bower_components/angular-mocks/angular-mocks.js',
       // endbower
       'client/app/app.js',

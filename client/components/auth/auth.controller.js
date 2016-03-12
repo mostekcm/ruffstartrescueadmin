@@ -12,14 +12,14 @@ class AuthController {
   login() {
     var store = this.store;
     var $state = this.$state;
-    this.auth.signin({}, function (profile, token) {
+    this.auth.signin({gravatar:false}, function (profile, token) {
       // Success callback
       store.set('profile', profile);
       store.set('token', token);
       $state.go('main');
-    }, function () {
+    }, function (error) {
       // Error callback
-      alert('error!');
+      alert('error!: '+error);
     });
   }
 
