@@ -34,6 +34,11 @@ var all = {
       secret: process.env.AUTH0_CLIENT_SECRET,
       clientID: process.env.AUTH0_CLIENT_ID
     },
+    facebook: {
+      secret: process.env.FACEBOOK_CLIENT_SECRET,
+      clientID: process.env.FACEBOOK_CLIENT_ID,
+      redirectUri: process.env.FACEBOOK_REDIRECT_URI
+    }
   },
 
   // MongoDB connection options
