@@ -18,7 +18,7 @@ import Event from '../event/event.model';
  * @param callback  function callback(eventDictionary) {...} a callback that will be passed a list of events split out into three categories eventDictionary => { onFacebookOnly: [...], notOnFacebook: [...], good: [...] }
  */
 export function createDiffDictionary(facebookEvents, mongoEvents, callback) {
-  var diffs = { onFacebookOnly: [], notOnFacebook: [], good: []};
+  var diffs = [];
   /* Create a dictionary of mongoEvents */
   var mongoEventMap = {};
   mongoEvents.forEach(function(mongoEvent) {
@@ -30,65 +30,42 @@ export function createDiffDictionary(facebookEvents, mongoEvents, callback) {
   facebookEvents.forEach(function(facebookEvent) {
     if (facebookEvent.name in mongoEventMap)
     {
-      diffs.good.push(mongoEventMap[facebookEvent.name]);
+      mongoEventMap[facebookEvent.name]['diff'] = 'Synced';
+      diffs.push(mongoEventMap[facebookEvent.name]);
       /* Delete from mongoEventMap */
       delete mongoEventMap[facebookEvent.name];
     } else
     {
       /* Add it to the onFacebookOnly */
-      diffs.onFacebookOnly.push(facebookEvent);
+      facebookEvent['diff'] = 'FacebookOnly';
+      diffs.push(facebookEvent);
     }
   });
 
   /* Now put the leftover DB events into the notOnFacebook for deletion approval */
   for (var name in mongoEventMap) {
-    diffs.notOnFacebook.push(mongoEventMap[name]);
+    mongoEventMap[name]['diff'] = 'NotOnFacebook';
+    diffs.push(mongoEventMap[name]);
   }
 
   callback(diffs);
 }
 
 function calculateDiffs(req, res, callback) {
-  // we don't have a code yet
-  // so we'll redirect to the oauth dialog
-  if (!req.query.code) {
-    var authUrl = graph.getOauthUrl({
-      "client_id":     config.secrets.facebook.clientID,
-      "redirect_uri":  config.secrets.facebook.redirectUri,
-      "scope":         'public_profile'
-    });
-
-    if (!req.query.error) { //checks whether a user denied the app facebook login/permissions
-      res.redirect(authUrl);
-    } else {  //req.query.error == 'access_denied'
-      res.send('access denied');
-    }
-    return;
-  }
 
   var diffs = {};
 
-  // code is set
-  // we'll send that and get the access token
-  graph.authorize({
-    "client_id":      config.secrets.facebook.clientID,
-    "redirect_uri":   config.secrets.facebook.redirectUri,
-    "client_secret":  config.secrets.facebook.secret,
-    "code":           req.query.code
-  }, function (err, facebookRes) {
-    /* Okay we are authorized, set the access token */
-    graph.setAccessToken(facebookRes.access_token);
+  graph.setAccessToken(config.secrets.facebook.clientID + '|' + config.secrets.facebook.secret);
 
-    /* okay, now we have set it, grab the list of events from facebook */
-    graph.get("ruffstart/events", function(err, facebookRes) {
-      var facebookEvents = facebookRes.data;
-      /* We now have our facebook events.  Match them to the events in Mongo */
-       Event.findAsync()
-        .then(function(mongoEvents) {
-          createDiffDictionary(facebookEvents,mongoEvents,callback);
-        })
-        .catch(handleError(res));
-    });
+  /* okay, now we have set it, grab the list of events from facebook */
+  graph.get("ruffstart/events", function(err, facebookRes) {
+    var facebookEvents = facebookRes.data;
+    /* We now have our facebook events.  Match them to the events in Mongo */
+     Event.findAsync()
+      .then(function(mongoEvents) {
+        createDiffDictionary(facebookEvents,mongoEvents,callback);
+      })
+      .catch(handleError(res));
   });
 }
 

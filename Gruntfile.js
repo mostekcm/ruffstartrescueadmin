@@ -656,6 +656,14 @@ module.exports = function (grunt) {
       return grunt.task.run(['build', 'buildcontrol:heroku']);
   });
 
+  grunt.registerTask('testClient', function(target) {
+    return grunt.task.run(['test:client']);
+  })
+
+  grunt.registerTask('testServer', function(target) {
+    return grunt.task.run(['test:server']);
+  })
+
   grunt.registerTask('test', function(target, option) {
     if (target === 'server') {
       return grunt.task.run([

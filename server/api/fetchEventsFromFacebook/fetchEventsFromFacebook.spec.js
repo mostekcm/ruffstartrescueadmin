@@ -31,25 +31,23 @@ describe('FetchEventsFromFacebook Underlying Methods:', function() {
       done();
     });
 
-    it('should respond with JSON array', function(done) {
-      var targetDiffDictionary = {
-        onFacebookOnly: [
-          facebookEvents[2],
-          facebookEvents[3]
-        ],
-        notOnFacebook: [
-          mongoEvents[2],
-          mongoEvents[3]
-        ],
-        good: [
-          facebookEvents[0],
-          facebookEvents[1]
-        ]
-      };
+    it('Should find events 1 & 2 the same, 3 & 4 on facebook only and 3&4 on database', function(done) {
+      facebookEvents[2]['diff'] = 'FacebookOnly';
+      facebookEvents[3]['diff'] = 'FacebookOnly';
+      mongoEvents[2]['diff'] = 'NotOnFacebook';
+      mongoEvents[3]['diff'] = 'NotOnFacebook';
+      facebookEvents[0]['diff'] = 'Synced';
+      facebookEvents[1]['diff'] = 'Synced';
+      var targetDiffDictionary = [
+        facebookEvents[0],
+        facebookEvents[1],
+        facebookEvents[2],
+        facebookEvents[3],
+        mongoEvents[2],
+        mongoEvents[3],
+      ];
       controller.createDiffDictionary(facebookEvents,mongoEvents,function (diffDictionary) {
-        expect(diffDictionary.onFacebookOnly).deep.equal(targetDiffDictionary.onFacebookOnly);
-        expect(diffDictionary.notOnFacebook).deep.equal(targetDiffDictionary.notOnFacebook);
-        expect(diffDictionary.good).deep.equal(targetDiffDictionary.good);
+        expect(diffDictionary).deep.equal(targetDiffDictionary);
         done();
       });
     });

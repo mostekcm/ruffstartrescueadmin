@@ -29,7 +29,6 @@ class AuthController {
     this.store.remove('token');
     this.$state.go(this.$state.current.name, this.$state.params, { reload: true });
   }
-
 }
 
 angular.module('adminApp.auth', ['auth0','angular-storage','angular-jwt'])

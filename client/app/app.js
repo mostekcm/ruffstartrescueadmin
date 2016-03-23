@@ -6,6 +6,7 @@ angular.module('adminApp', [
   'angular-jwt',
   'adminApp.auth',
   'adminApp.constants',
+  'datatables',
   'ngCookies',
   'ngResource',
   'ngSanitize',
