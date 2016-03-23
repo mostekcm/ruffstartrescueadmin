@@ -11,6 +11,38 @@ import graph from 'fbgraph';
 import config from '../../config/environment';
 import Event from '../event/event.model';
 
+function isValidDate(d) {
+  if ( Object.prototype.toString.call(d) !== "[object Date]" )
+    return false;
+  return !isNaN(d.getTime());
+}
+
+function filterOutOldEvents(allEvents) {
+  var events = [];
+  /* First filter out old events */
+  allEvents.forEach(function(event) {
+    /* Use end time if available */
+    var end = new Date(event.end_time);
+    var start = new Date(event.start_time);
+    var date = null;
+    if (!isValidDate(end) || end < start) {
+      date = start;
+    } else {
+      date = end;
+    }
+    var current = new Date(Date.now());
+
+    /* Just check the date part */
+    date.setHours(0,0,0,0);
+    current.setHours(0,0,0,0);
+    if (date >= current) {
+      events.push(event);
+    }
+  });
+
+  return events;
+}
+
 /**
  * ONLY EXPORTING THIS FOR TESTING PURPOSES, though it could be used elsewhere.
  * @param facebookEvents the list of facebook events
@@ -18,6 +50,10 @@ import Event from '../event/event.model';
  * @param callback  function callback(eventDictionary) {...} a callback that will be passed a list of events split out into three categories eventDictionary => { onFacebookOnly: [...], notOnFacebook: [...], good: [...] }
  */
 export function createDiffDictionary(facebookEvents, mongoEvents, callback) {
+  /* Only Care about current events */
+  facebookEvents = filterOutOldEvents(facebookEvents);
+  mongoEvents = filterOutOldEvents(mongoEvents);
+
   var diffs = [];
   /* Create a dictionary of mongoEvents */
   var mongoEventMap = {};
@@ -26,7 +62,6 @@ export function createDiffDictionary(facebookEvents, mongoEvents, callback) {
   });
 
   /* Create a dictionary of facebookEvents that aren't in Mongo yet */
-  var facebookEventMap = {};
   facebookEvents.forEach(function(facebookEvent) {
     if (facebookEvent.name in mongoEventMap)
     {
@@ -60,10 +95,12 @@ function calculateDiffs(req, res, callback) {
   /* okay, now we have set it, grab the list of events from facebook */
   graph.get("ruffstart/events", function(err, facebookRes) {
     var facebookEvents = facebookRes.data;
+
+
     /* We now have our facebook events.  Match them to the events in Mongo */
-     Event.findAsync()
-      .then(function(mongoEvents) {
-        createDiffDictionary(facebookEvents,mongoEvents,callback);
+    Event.findAsync()
+      .then(function (mongoEvents) {
+        createDiffDictionary(facebookEvents, mongoEvents, callback);
       })
       .catch(handleError(res));
   });

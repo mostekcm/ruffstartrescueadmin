@@ -1,12 +1,12 @@
 'use strict';
 
 angular.module('adminApp', [
+  'datatables',
   'auth0',
   'angular-storage',
   'angular-jwt',
   'adminApp.auth',
   'adminApp.constants',
-  'datatables',
   'ngCookies',
   'ngResource',
   'ngSanitize',
