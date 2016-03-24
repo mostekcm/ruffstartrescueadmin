@@ -19,7 +19,7 @@ class EventsController {
 
     /* Create the columns based on the requested list of columns */
     vm.dtColumns = [
-      DTColumnBuilder.newColumn('diff').withTitle('Type').withOption('defaultContent', ''),
+      DTColumnBuilder.newColumn('diff').withTitle('Status').withOption('defaultContent', ''),
       DTColumnBuilder.newColumn('name').withTitle('Name').withOption('defaultContent', ''),
       DTColumnBuilder.newColumn('start_time').withTitle('Start Time').withOption('defaultContent', ''),
       DTColumnBuilder.newColumn('end_time').withTitle('End Time').withOption('defaultContent', '')

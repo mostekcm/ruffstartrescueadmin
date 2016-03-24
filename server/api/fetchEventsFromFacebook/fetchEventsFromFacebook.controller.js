@@ -10,6 +10,7 @@ import _ from 'lodash';
 import graph from 'fbgraph';
 import config from '../../config/environment';
 import Event from '../event/event.model';
+import rest from '../../components/util/REST';
 
 function isValidDate(d) {
   if ( Object.prototype.toString.call(d) !== "[object Date]" )
@@ -37,6 +38,8 @@ function filterOutOldEvents(allEvents) {
     current.setHours(0,0,0,0);
     if (date >= current) {
       events.push(event);
+    } else {
+      console.log('SKIPPED: '+event.name+', '+date+', current: '+current+', end');
     }
   });
 
@@ -46,29 +49,39 @@ function filterOutOldEvents(allEvents) {
 /**
  * ONLY EXPORTING THIS FOR TESTING PURPOSES, though it could be used elsewhere.
  * @param facebookEvents the list of facebook events
- * @param mongoEvents the list of mongo events
+ * @param eventbriteEvents the list of eventbrite events
  * @param callback  function callback(eventDictionary) {...} a callback that will be passed a list of events split out into three categories eventDictionary => { onFacebookOnly: [...], notOnFacebook: [...], good: [...] }
  */
-export function createDiffDictionary(facebookEvents, mongoEvents, callback) {
+export function createDiffDictionary(facebookEvents, rawEventbriteEvents, callback) {
   /* Only Care about current events */
   facebookEvents = filterOutOldEvents(facebookEvents);
-  mongoEvents = filterOutOldEvents(mongoEvents);
+
+  /* Patch eventbrite events so the fields are the same names */
+  var eventbriteEvents = [];
+  rawEventbriteEvents.forEach(function(eventbriteEvent) {
+    eventbriteEvent.description = eventbriteEvent.description.html;
+    eventbriteEvent.start_time = eventbriteEvent.start.local;
+    eventbriteEvent.end_time = eventbriteEvent.end.local;
+    eventbriteEvents.push(eventbriteEvent);
+  });
+  eventbriteEvents = filterOutOldEvents(eventbriteEvents);
 
   var diffs = [];
   /* Create a dictionary of mongoEvents */
-  var mongoEventMap = {};
-  mongoEvents.forEach(function(mongoEvent) {
-    mongoEventMap[mongoEvent.name] = mongoEvent;
+  var eventbriteEventMap = {};
+  eventbriteEvents.forEach(function(eventbriteEvent) {
+    console.log("Carlos, found eventbrite: "+eventbriteEvent.name.text);
+    eventbriteEventMap[eventbriteEvent.name.text] = eventbriteEvent;
   });
 
-  /* Create a dictionary of facebookEvents that aren't in Mongo yet */
+  /* Create a dictionary of facebookEvents that aren't in eventbrite yet */
   facebookEvents.forEach(function(facebookEvent) {
-    if (facebookEvent.name in mongoEventMap)
+    if (facebookEvent.name in eventbriteEventMap)
     {
-      mongoEventMap[facebookEvent.name]['diff'] = 'Synced';
-      diffs.push(mongoEventMap[facebookEvent.name]);
-      /* Delete from mongoEventMap */
-      delete mongoEventMap[facebookEvent.name];
+      facebookEvent.diff = 'Synced';
+      diffs.push(facebookEvent);
+      /* Delete from eventbriteEventMap */
+      delete eventbriteEventMap[facebookEvent.name];
     } else
     {
       /* Add it to the onFacebookOnly */
@@ -78,9 +91,11 @@ export function createDiffDictionary(facebookEvents, mongoEvents, callback) {
   });
 
   /* Now put the leftover DB events into the notOnFacebook for deletion approval */
-  for (var name in mongoEventMap) {
-    mongoEventMap[name]['diff'] = 'NotOnFacebook';
-    diffs.push(mongoEventMap[name]);
+  for (var name in eventbriteEventMap) {
+    eventbriteEventMap[name]['diff'] = 'NotOnFacebook';
+    /* Munge a couple of values for the website */
+    eventbriteEventMap[name]['name'] = eventbriteEventMap[name].name.html;
+    diffs.push(eventbriteEventMap[name]);
   }
 
   callback(diffs);
@@ -94,15 +109,27 @@ function calculateDiffs(req, res, callback) {
 
   /* okay, now we have set it, grab the list of events from facebook */
   graph.get("ruffstart/events", function(err, facebookRes) {
-    var facebookEvents = facebookRes.data;
-
-
-    /* We now have our facebook events.  Match them to the events in Mongo */
+    if (err) {
+      handleError(res);
+    } else {
+      var facebookEvents = facebookRes.data;
+      /* We now have our facebook events.  Match them to the events in eventbrite */
+      rest.get(
+        'www.eventbriteapi.com',
+        '/v3/users/me/owned_events/',
+        config.secrets.eventbrite.key,
+        {status:'live',order_by:'start_asc'},
+        function(data) {
+          createDiffDictionary(facebookEvents, data.events, callback);
+      });
+    }
+    /* Used to check against mongo, but should instead check against eventbrite
     Event.findAsync()
       .then(function (mongoEvents) {
         createDiffDictionary(facebookEvents, mongoEvents, callback);
       })
       .catch(handleError(res));
+      */
   });
 }
 

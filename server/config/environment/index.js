@@ -38,6 +38,9 @@ var all = {
       secret: process.env.FACEBOOK_CLIENT_SECRET,
       clientID: process.env.FACEBOOK_CLIENT_ID,
       redirectUri: process.env.FACEBOOK_REDIRECT_URI
+    },
+    eventbrite: {
+      key: process.env.EVENTBRITE_KEY
     }
   },
 
