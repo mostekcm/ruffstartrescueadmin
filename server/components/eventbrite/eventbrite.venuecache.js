@@ -34,7 +34,7 @@ EventBriteVenueCache.prototype.getMap = function getMap(callback, errorCallback)
       });
 
       /* Save the venues in the cache for an hour */
-      mcache.put(cache, 1000 * 60 * 60);
+      mcache.put(key, cache, 1000 * 60 * 60);
 
       console.log("DONE  retrieving venues from eventbrite...");
       callback(cache);
