@@ -17,6 +17,7 @@ export default function(app) {
   });
 
   // Insert routes below
+  app.use('/api/eventBriteEvent', require('./api/eventBriteEvent'));
   app.use('/api/fetchEventsFromFacebook', require('./api/fetchEventsFromFacebook'));
   app.use('/api/events', jwtCheck);
   app.use('/api/events', require('./api/event'));

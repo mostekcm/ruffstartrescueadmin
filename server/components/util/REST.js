@@ -41,8 +41,9 @@ module.exports = {
             });
 
             res.on('end', function () {
-                var responseObject = JSON.parse(responseString);
-                success(responseObject);
+              if (responseString == "") responseString = "{}";
+              var responseObject = JSON.parse(responseString);
+              success(responseObject);
             });
         });
 

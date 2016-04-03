@@ -11,6 +11,7 @@ import graph from 'fbgraph';
 import config from '../../config/environment';
 import Event from '../event/event.model';
 import rest from '../../components/util/REST';
+import moment from 'moment-timezone';
 
 function isValidDate(d) {
   if ( Object.prototype.toString.call(d) !== "[object Date]" )
@@ -18,6 +19,11 @@ function isValidDate(d) {
   return !isNaN(d.getTime());
 }
 
+/**
+ * Remove any events that have a date older than todays date.  Ignore time.
+ * @param allEvents -- events must have the format [ { start_time: "YYYY-MM-DDTHH:MM:SS-ZZZZ" .... }, {...}, ... ]
+ * @returns {Array}
+ */
 function filterOutOldEvents(allEvents) {
   var events = [];
   /* First filter out old events */
@@ -39,11 +45,39 @@ function filterOutOldEvents(allEvents) {
     if (date >= current) {
       events.push(event);
     } else {
-      console.log('SKIPPED: '+event.name+', '+date+', current: '+current+', end');
+      //console.log('SKIPPED: '+event.name+', '+date+', current: '+current+', end');
     }
   });
 
   return events;
+}
+
+/**
+ * Facebook and moment disagree on how to format the timezone offset
+ * @param timeString
+ * @returns {*}
+ */
+function killTimezoneColon(timeString) {
+  return timeString.slice(0,22) + timeString.slice(23,timeString.length);
+}
+
+/**
+ * Event brite does funny things with their event format, converting them appropriately here.
+ * @param rawEventbriteEvents
+ * @returns {Array}
+ */
+function patchEventbriteEvents(rawEventbriteEvents) {
+  var eventbriteEvents = [];
+  rawEventbriteEvents.forEach(function(eventbriteEvent) {
+    eventbriteEvent.description = eventbriteEvent.description.html;
+    eventbriteEvent.name = eventbriteEvent.name.text;
+    var start = moment.tz(eventbriteEvent.start.local, eventbriteEvent.start.timezone);
+    var end = moment.tz(eventbriteEvent.end.local, eventbriteEvent.end.timezone);
+    eventbriteEvent.start_time = killTimezoneColon(start.format());
+    eventbriteEvent.end_time = killTimezoneColon(end.format());
+    eventbriteEvents.push(eventbriteEvent);
+  });
+  return eventbriteEvents;
 }
 
 /**
@@ -52,36 +86,31 @@ function filterOutOldEvents(allEvents) {
  * @param eventbriteEvents the list of eventbrite events
  * @param callback  function callback(eventDictionary) {...} a callback that will be passed a list of events split out into three categories eventDictionary => { onFacebookOnly: [...], notOnFacebook: [...], good: [...] }
  */
-export function createDiffDictionary(facebookEvents, rawEventbriteEvents, callback) {
+export function createDiffDictionary(facebookEvents, eventbriteEvents, callback) {
   /* Only Care about current events */
   facebookEvents = filterOutOldEvents(facebookEvents);
-
-  /* Patch eventbrite events so the fields are the same names */
-  var eventbriteEvents = [];
-  rawEventbriteEvents.forEach(function(eventbriteEvent) {
-    eventbriteEvent.description = eventbriteEvent.description.html;
-    eventbriteEvent.start_time = eventbriteEvent.start.local;
-    eventbriteEvent.end_time = eventbriteEvent.end.local;
-    eventbriteEvents.push(eventbriteEvent);
-  });
   eventbriteEvents = filterOutOldEvents(eventbriteEvents);
 
   var diffs = [];
   /* Create a dictionary of mongoEvents */
   var eventbriteEventMap = {};
   eventbriteEvents.forEach(function(eventbriteEvent) {
-    console.log("Carlos, found eventbrite: "+eventbriteEvent.name.text);
-    eventbriteEventMap[eventbriteEvent.name.text] = eventbriteEvent;
+    //console.log("Carlos, found eventbrite: "+eventbriteEvent.name);
+    if (!(eventbriteEvent.name in eventbriteEventMap)) {
+      eventbriteEventMap[eventbriteEvent.name] = {};
+    }
+    eventbriteEventMap[eventbriteEvent.name][eventbriteEvent.start_time] = eventbriteEvent;
   });
 
   /* Create a dictionary of facebookEvents that aren't in eventbrite yet */
   facebookEvents.forEach(function(facebookEvent) {
-    if (facebookEvent.name in eventbriteEventMap)
+    if (facebookEvent.name in eventbriteEventMap &&
+        facebookEvent.start_time in eventbriteEventMap[facebookEvent.name])
     {
       facebookEvent.diff = 'Synced';
       diffs.push(facebookEvent);
       /* Delete from eventbriteEventMap */
-      delete eventbriteEventMap[facebookEvent.name];
+      delete eventbriteEventMap[facebookEvent.name][facebookEvent.start_time];
     } else
     {
       /* Add it to the onFacebookOnly */
@@ -92,10 +121,10 @@ export function createDiffDictionary(facebookEvents, rawEventbriteEvents, callba
 
   /* Now put the leftover DB events into the notOnFacebook for deletion approval */
   for (var name in eventbriteEventMap) {
-    eventbriteEventMap[name]['diff'] = 'NotOnFacebook';
-    /* Munge a couple of values for the website */
-    eventbriteEventMap[name]['name'] = eventbriteEventMap[name].name.html;
-    diffs.push(eventbriteEventMap[name]);
+    for (var start_time in eventbriteEventMap[name]) {
+      eventbriteEventMap[name][start_time]['diff'] = 'NotOnFacebook';
+      diffs.push(eventbriteEventMap[name][start_time]);
+    }
   }
 
   callback(diffs);
@@ -120,7 +149,8 @@ function calculateDiffs(req, res, callback) {
         config.secrets.eventbrite.key,
         {status:'live',order_by:'start_asc'},
         function(data) {
-          createDiffDictionary(facebookEvents, data.events, callback);
+          /* Patch eventbrite events so the fields are the same names */
+          createDiffDictionary(facebookEvents, patchEventbriteEvents(data.events), callback);
       });
     }
     /* Used to check against mongo, but should instead check against eventbrite

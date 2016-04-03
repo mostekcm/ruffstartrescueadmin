@@ -55,7 +55,7 @@ describe('FetchEventsFromFacebook Underlying Methods:', function() {
   });
 
   describe('createEventDiffs ignore old events', function() {
-    var facebookEvents, mongoEvents, targetDiffs;
+    var facebookEvents, mongoEvents;
 
     beforeEach(function(done) {
       var tomorrow = moment(new Date(new Date().getTime() + 24 * 60 * 60 * 1000));
@@ -70,6 +70,7 @@ describe('FetchEventsFromFacebook Underlying Methods:', function() {
       facebookEvents = [
         { name: 'both1', "start_time":dateString+"T08:00:00-0500", "end_time":dateString+"T14:00:00-0500" },
         { name: 'both2', "start_time":dateString+"T08:00:00-0500", "end_time":dateString+"T14:00:00-0500" },
+        { name: 'both2', "start_time":todayString+"T08:00:00-0500", "end_time":todayString+"T14:00:00-0500" },
         { name: 'old1', "start_time":yesterdayString+"T08:00:00-0500", "end_time":yesterdayString+"T14:00:00-0500" },
         { name: 'old3', "start_time":yesterdayString+"T08:00:00-0500" },
         { name: 'old4', "start_time":yesterdayString+"T08:00:00-0500", "end_time": null },
@@ -80,6 +81,7 @@ describe('FetchEventsFromFacebook Underlying Methods:', function() {
       mongoEvents = [
         { name: 'both1', "start_time":dateString+"T08:00:00-0500", "end_time":dateString+"T14:00:00-0500" },
         { name: 'both2', "start_time":dateString+"T08:00:00-0500", "end_time":dateString+"T14:00:00-0500" },
+        { name: 'both2', "start_time":todayString+"T08:00:00-0500", "end_time":todayString+"T14:00:00-0500" },
         { name: 'old2', "start_time":yesterdayString+"T08:00:00-0500", "end_time":yesterdayString+"T14:00:00-0500" },
         { name: 'today1', "start_time":todayString+"T00:00:00-0500", "end_time":todayString+"T00:00:00-0500" },
         { name: 'today2', "start_time":todayString+"T08:00:00-0500", "end_time": null },
@@ -91,13 +93,15 @@ describe('FetchEventsFromFacebook Underlying Methods:', function() {
     it('Should find events 1 & 2 the same, 3 & 4 on facebook only and 3&4 on database', function(done) {
       facebookEvents[0]['diff'] = 'Synced';
       facebookEvents[1]['diff'] = 'Synced';
-      facebookEvents[5]['diff'] = 'Synced';
+      facebookEvents[2]['diff'] = 'Synced';
       facebookEvents[6]['diff'] = 'Synced';
+      facebookEvents[7]['diff'] = 'Synced';
       var targetDiffDictionary = [
         facebookEvents[0],
         facebookEvents[1],
-        facebookEvents[5],
+        facebookEvents[2],
         facebookEvents[6],
+        facebookEvents[7],
       ];
       controller.createDiffDictionary(facebookEvents,mongoEvents,function (diffDictionary) {
         expect(diffDictionary).deep.equal(targetDiffDictionary);

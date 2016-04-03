@@ -1,16 +1,51 @@
 <div ng-show="events.notPermitted()">Not Permitted</div>
-<div ng-show="events.isPermitted()">
+<div-- ng-show="events.isPermitted()">
   <header class="hero-unit" id="banner">
     <div class="container">
       <h3>Events List</h3>
     </div>
   </header>
 
-  <div class="container">
+  <!--div class="container">
     <!-- Let's put the datatable here -->
-    <table datatable="" dt-options="events.dtOptions" dt-columns="events.dtColumns" dt-instance="events.dtInstance" class="row-border hover" style="width:100%;">
+    <!--table datatable="" dt-options="events.dtOptions" dt-columns="events.dtColumns" dt-instance="events.dtInstance" class="row-border hover" style="width:100%;">
     </table>
 
-  </div>
+  </div-->
+
+  <table datatable="ng" class="row-border hover">
+    <thead>
+    <tr>
+      <th>Status</th>
+      <th>Name</th>
+      <th>Start Time</th>
+      <th>End Time</th>
+      <th>Actions</th>
+    </tr>
+    </thead>
+    <tbody>
+    <tr ng-repeat="event in ::events.events track by $index">
+      <td>{{ event.diff }}</td>
+      <td>{{ event.name }}</td>
+      <td>{{ event.start_time }}</td>
+      <td>{{ event.end_time }}</td>
+      <td>
+        <button class="btn btn-warning"
+                title="Create the Eventbrite Event"
+                ng-click="events.createEventbrite(event)"
+                ng-show="event.diff == 'FacebookOnly'">
+          <i class="fa fa-plus"></i>
+        </button>
+        <!-- don't want this for now, may add it later: button class="btn btn-danger"
+                title="Delete the Eventbrite Event"
+                ng-click="events.delete(event)"
+                ng-show="event.diff == 'Synced'">
+          <i class="fa fa-trash-o"></i>
+        </button -->
+      </td>
+    </tr>
+    </tbody>
+  </table>
+
 </div>
 
