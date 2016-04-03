@@ -3,6 +3,10 @@
   <header class="hero-unit" id="banner">
     <div class="container">
       <h3>Events List</h3>
+      <div class="alert alert-danger fade in" ng-show="events.errorMessage != ''">
+        <a href="#" class="close" data-dismiss="alert" aria-label="close" title="close">×</a>
+        <strong>Error!</strong> {{ events.errorMessage }}
+      </div>
     </div>
   </header>
 

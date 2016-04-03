@@ -21,6 +21,7 @@ EventBriteVenueCache.prototype.getMap = function getMap(callback, errorCallback)
   var key = "EventBriteVenueCache__map";
   var cache = mcache.get(key);
   if (!cache) {
+    console.log("START retrieving venues from eventbrite...");
     /* We don't have it yet, let's grab it from eventbrite */
     this.EventBriteService.getVenues(function (venues) {
       cache = {};
@@ -35,6 +36,7 @@ EventBriteVenueCache.prototype.getMap = function getMap(callback, errorCallback)
       /* Save the venues in the cache for an hour */
       mcache.put(cache, 1000 * 60 * 60);
 
+      console.log("DONE  retrieving venues from eventbrite...");
       callback(cache);
     }, function (error) {
       console.error("Couldn't get venues for some reason, returning null: " + JSON.stringify(error));
@@ -52,25 +54,30 @@ EventBriteVenueCache.prototype.getMap = function getMap(callback, errorCallback)
  * @errorCallback function (error) { ... }
  */
 EventBriteVenueCache.prototype.search = function search(address, callback, errorCallback) {
-  var instance = this;
-  this.getMap(function (venueMap) {
-    var venue_id = null;
 
-    /* find the value in the cache if it exists */
-    if (address.location.street in venueMap) {
-      callback(venueMap[address.location.street]);
-    } else {
-      /* if it does not exist, create it */
-      instance.EventBriteService.createVenue(address, function (venue) {
-        venue_id = venue.id;
-        venueMap[address.location.street] = venue_id;
-        callback(venue_id);
-      }, function (error) {
-        console.error("Could not create new venue for address (%s) because (%s)", JSON.stringify(address), JSON.stringify(error));
-        errorCallback(error);
-      });
-    }
-  }, errorCallback);
+  if (!address.location || !address.location.street) {
+    errorCallback({message: "Bad address from facebook"});
+  } else {
+    var instance = this;
+    this.getMap(function (venueMap) {
+      var venue_id = null;
+
+      /* find the value in the cache if it exists */
+      if (address.location.street in venueMap) {
+        callback(venueMap[address.location.street]);
+      } else {
+        /* if it does not exist, create it */
+        instance.EventBriteService.createVenue(address, function (venue) {
+          venue_id = venue.id;
+          venueMap[address.location.street] = venue_id;
+          callback(venue_id);
+        }, function (error) {
+          console.error("Could not create new venue for address (%s) because (%s)", JSON.stringify(address), JSON.stringify(error));
+          errorCallback(error);
+        });
+      }
+    }, errorCallback);
+  }
 }
 
 module.exports = EventBriteVenueCache;

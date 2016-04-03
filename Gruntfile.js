@@ -652,6 +652,10 @@ module.exports = function (grunt) {
     ]);
   });
 
+  grunt.registerTask('serveDist', function (target) {
+    return grunt.task.run(['serve:dist']);
+  });
+
   grunt.registerTask('deploy', function (target) {
       return grunt.task.run(['build', 'buildcontrol:heroku']);
   });

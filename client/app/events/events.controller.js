@@ -6,6 +6,7 @@ class EventsController {
     var vm = this;
     this.$http = $http;
     this.auth = auth;
+    this.errorMessage = "";
     vm.AuthUtil = AuthUtil;
     //vm.dtOptions = DTOptionsBuilder.fromFnPromise(function () {
     //    return $resource('/api/fetchEventsFromFacebook', {},
@@ -60,6 +61,8 @@ class EventsController {
 
   createEventbrite(event) {
     /* Send request */
+    this.errorMessage = "";
+    var ctrl = this;
     this.$http.post('/api/eventBriteEvent', event)
       .then(function() {
         /* On Success, convert this row to a diff == Synced */
@@ -67,6 +70,11 @@ class EventsController {
       }, function(error) {
         /* On Failure, growl */
         console.log(error);
+        if (error.data && error.data.message) {
+          ctrl.errorMessage = error.data.message;
+        } else {
+          ctrl.errorMessage = JSON.stringify(error);
+        }
       });
   };
 

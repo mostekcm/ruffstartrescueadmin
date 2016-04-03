@@ -79,8 +79,8 @@ export function create(req, res) {
       function (event) {
         /* Patch eventbrite events so the fields are the same names */
         if ("status_code" in event) {
-          console.error("Error creating eventbrite event for event (%s), eventbriteEvent (%s), error(%s)",facebookEvent,eventBriteEvent,event);
-          handleError(res, event.status_code);
+          console.error("Error creating eventbrite event for event (%s), eventbriteEvent (%s), error(%s)",JSON.stringify(facebookEvent),JSON.stringify(eventBriteEvent),JSON.stringify(event));
+          handleError(res, event.status_code)(event);
         } else {
 
           var ticket_class = {
@@ -101,8 +101,8 @@ export function create(req, res) {
             function (ticket_class) {
               /* Patch eventbrite events so the fields are the same names */
               if ("status_code" in ticket_class) {
-                console.error("Error adding tickets to event event (%s), eventbriteEvent (%s), error(%s)",facebookEvent,eventBriteEvent,ticket_class);
-                handleError(res, ticket_class.status_code);
+                console.error("Error adding tickets to event event (%s), eventbriteEvent (%s), error(%s)",JSON.stringify(facebookEvent),JSON.stringify(eventBriteEvent),JSON.stringify(ticket_class));
+                handleError(res, ticket_class.status_code)(ticket_class);
               } else {
                 /* I think we need to call the "make live" endpoint */
                 rest.post(
@@ -113,8 +113,8 @@ export function create(req, res) {
                   function (data) {
                     /* Patch eventbrite events so the fields are the same names */
                     if ("status_code" in data) {
-                      console.error("Error publishing event (%s), eventbriteEvent (%s), error(%s)",facebookEvent,eventBriteEvent,data);
-                      handleError(res, data.status_code);
+                      console.error("Error publishing event (%s), eventbriteEvent (%s), error(%s)",JSON.stringify(facebookEvent),JSON.stringify(eventBriteEvent),JSON.stringify(data));
+                      handleError(res, data.status_code)(data);
                     } else {
                       respondWithResult(res, 201)(eventBriteEvent);
                     }
@@ -126,8 +126,8 @@ export function create(req, res) {
         }
       });
   }, function (error) {
-    console.error("Error with getting the venue ID for event (%s), error(%s)",facebookEvent,error);
-    handleError(res, error);
+    console.error("Error with getting the venue ID for event (%s), error(%s)",JSON.stringify(facebookEvent),JSON.stringify(error));
+    handleError(res, 400)(error);
   });
 }
 
