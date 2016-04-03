@@ -369,7 +369,16 @@ module.exports = function (grunt) {
             'assets/fonts/**/*',
             'index.html'
           ]
-        }, {
+        },{
+          // Grab the datatables sort images
+          expand: true,
+          flatten: true,
+          cwd: '<%= yeoman.client %>',
+          dest: '<%= yeoman.dist %>/<%= yeoman.client %>/images',
+          src: [
+            'bower_components/**/sort*.png'
+          ]
+        },{
           expand: true,
           cwd: '.tmp/images',
           dest: '<%= yeoman.dist %>/<%= yeoman.client %>/assets/images',
